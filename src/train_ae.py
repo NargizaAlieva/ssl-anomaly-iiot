@@ -2,6 +2,7 @@ import argparse
 import os
 import time
 
+import librosa
 import numpy as np
 import pandas as pd
 import torch
@@ -10,11 +11,12 @@ from torch.utils.data import DataLoader, TensorDataset
 from metrics import convergence_epoch, evaluate
 from models.conv_ae import ConvAE
 from models.dense_ae import DenseAE
+from models.lstm_ae import LSTMAE
 
 DATA_DIR = os.path.join("data", "processed")
 SCENARIOS = ["S1", "S2", "S3", "LOLO0", "LOLO1", "LOLO2", "LOLO3"]
-MODELS = {"conv": ConvAE, "dense": DenseAE}
-
+FS = 12000
+MODELS = {"conv": ConvAE, "dense": DenseAE, "lstm": LSTMAE}
 def prepare(d, model_name, norm):
     keys = ("X_train", "X_val", "X_val_mon", "X_test")
     Xs = [d[k] for k in keys]
@@ -22,10 +24,16 @@ def prepare(d, model_name, norm):
         Xs = [(X - X.mean(axis=1, keepdims=True)) / (X.std(axis=1, keepdims=True) + 1e-8) for X in Xs]
     if model_name == "conv":
         mean, std = (float(d["mean"]), float(d["std"])) if norm == "global" else (0.0, 1.0)
-        return [torch.from_numpy((X - mean) / std).float().unsqueeze(1) for X in Xs] 
-    specs = [np.log1p(np.abs(np.fft.rfft(X, axis=1)))[:, :1024] for X in Xs]
-    mean, std = specs[0].mean(axis=0), specs[0].std(axis=0) + 1e-8
-    return [torch.from_numpy((s - mean) / std).float() for s in specs]
+        return [torch.from_numpy((X - mean) / std).float().unsqueeze(1) for X in Xs]
+    if model_name == "lstm":
+        feats = [librosa.power_to_db(librosa.feature.melspectrogram(
+                     y=X.astype(np.float32), sr=FS, n_fft=256, hop_length=64, n_mels=32), top_db=None)
+                 .transpose(0, 2, 1) for X in Xs]
+    else:
+        feats = [np.log1p(np.abs(np.fft.rfft(X, axis=1)))[:, :1024] for X in Xs]
+    axes = tuple(range(feats[0].ndim - 1))
+    mean, std = feats[0].mean(axis=axes), feats[0].std(axis=axes) + 1e-8
+    return [torch.from_numpy((f - mean) / std).float() for f in feats]
 
 @torch.no_grad()
 def scores(model, X, device, batch=512):
