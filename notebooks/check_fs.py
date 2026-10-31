@@ -7,7 +7,6 @@ DATA_DIR = os.path.join("data", "raw", "cwru")
 
 
 def load(num):
-    """Return (signal, rpm) for a CWRU file number."""
     m = sio.loadmat(os.path.join(DATA_DIR, f"{num}.mat"))
     x = m[f"X{num:03d}_DE_time"].ravel()
     rpm_keys = [k for k in m if k.endswith("RPM")]

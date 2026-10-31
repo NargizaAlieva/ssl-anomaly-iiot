@@ -1,4 +1,5 @@
-data/
+data/processsed/
+data/raw/
 .venv/
 __pycache__/
 *.pt

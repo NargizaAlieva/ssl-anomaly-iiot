@@ -8,11 +8,6 @@ DATA_DIR = os.path.join("data", "raw", "cwru")
 
 
 def load_de_signal(file_name):
-    """Return (key, signal) for the Drive End channel of a CWRU .mat file.
-
-    Some files (e.g. 99.mat) contain variables of several recordings,
-    so the key matching the file number is preferred.
-    """
     m = sio.loadmat(os.path.join(DATA_DIR, file_name))
     num = int(file_name.split(".")[0])
     key = f"X{num:03d}_DE_time"
@@ -36,7 +31,6 @@ for r in rows:
     print(f"{r['file']:>8}  {r['type']:>6} {r['size']:>5} {r['load_hp']}HP   "
           f"{key:<14} {len(x):>8}")
 
-# Plot: normal vs inner race fault, 0 HP, first 2048 samples
 fig, axes = plt.subplots(2, 1, figsize=(10, 5), sharex=True)
 for ax, name, title in [(axes[0], "97.mat", "Normal, 0 HP"),
                         (axes[1], "105.mat", "Inner Race fault 0.007 in, 0 HP")]:
