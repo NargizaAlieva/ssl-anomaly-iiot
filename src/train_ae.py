@@ -9,12 +9,20 @@ from torch.utils.data import DataLoader, TensorDataset
 
 from metrics import convergence_epoch, evaluate
 from models.conv_ae import ConvAE
+from models.dense_ae import DenseAE
 
 DATA_DIR = os.path.join("data", "processed")
 SCENARIOS = ["S1", "S2", "S3", "LOLO0", "LOLO1", "LOLO2", "LOLO3"]
+MODELS = {"conv": ConvAE, "dense": DenseAE}
 
-def to_tensor(X, mean, std):
-    return torch.from_numpy((X - mean) / std).float().unsqueeze(1)
+def prepare(d, model_name):
+    keys = ("X_train", "X_val", "X_val_mon", "X_test")
+    if model_name == "conv":
+        mean, std = float(d["mean"]), float(d["std"])
+        return [torch.from_numpy((d[k] - mean) / std).float().unsqueeze(1) for k in keys]
+    specs = [np.log1p(np.abs(np.fft.rfft(d[k], axis=1)))[:, :1024] for k in keys]
+    mean, std = specs[0].mean(axis=0), specs[0].std(axis=0) + 1e-8
+    return [torch.from_numpy((s - mean) / std).float() for s in specs]
 
 @torch.no_grad()
 def scores(model, X, device, batch=512):
@@ -22,19 +30,17 @@ def scores(model, X, device, batch=512):
     out = []
     for i in range(0, len(X), batch):
         x = X[i:i + batch].to(device)
-        out.append(((model(x) - x) ** 2).mean(dim=(1, 2)).cpu())
+        out.append(((model(x) - x) ** 2).flatten(1).mean(dim=1).cpu())
     return torch.cat(out).numpy()
 
 def run(name, args, device):
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
     d = np.load(os.path.join(DATA_DIR, f"cwru_{name}.npz"))
-    mean, std = float(d["mean"]), float(d["std"])
-    X_train, X_val, X_mon, X_test = (to_tensor(d[k], mean, std)
-                                     for k in ("X_train", "X_val", "X_val_mon", "X_test"))
+    X_train, X_val, X_mon, X_test = prepare(d, args.model)
     loader = DataLoader(TensorDataset(X_train), batch_size=args.batch, shuffle=True)
 
-    model = ConvAE(args.latent).to(device)
+    model = MODELS[args.model](latent=args.latent).to(device)
     opt = torch.optim.Adam(model.parameters(), lr=args.lr)
     history, best, best_state, wait = [], float("inf"), None, 0
     start = time.time()
@@ -67,7 +73,8 @@ def run(name, args, device):
     model.load_state_dict(best_state)
     best_epoch = int(np.argmin([h["val_loss"] for h in history])) + 1
     res = evaluate(scores(model, X_val, device), scores(model, X_test, device), d["y_test"])
-    res.update(scenario=name, seed=args.seed, best_epoch=best_epoch, epochs_run=len(history),
+    res.update(model=args.model, scenario=name, seed=args.seed, best_epoch=best_epoch,
+               epochs_run=len(history),
                convergence_epoch=convergence_epoch([h["mon_auc"] for h in history],
                                                    history[best_epoch - 1]["mon_auc"]),
                train_time_s=round(time.time() - start, 1))
@@ -82,6 +89,7 @@ def run(name, args, device):
 
 def main():
     p = argparse.ArgumentParser()
+    p.add_argument("--model", choices=list(MODELS), default="conv")
     p.add_argument("--scenarios", nargs="+", default=SCENARIOS)
     p.add_argument("--epochs", type=int, default=100)
     p.add_argument("--patience", type=int, default=10)
@@ -89,11 +97,12 @@ def main():
     p.add_argument("--lr", type=float, default=1e-3)
     p.add_argument("--latent", type=int, default=64)
     p.add_argument("--seed", type=int, default=0)
-    p.add_argument("--out", default=os.path.join("results", "conv_ae"))
+    p.add_argument("--out", default=None)
     args = p.parse_args()
+    args.out = args.out or os.path.join("results", f"{args.model}_ae")
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    print("device:", device)
+    print("device:", device, "| model:", args.model)
     rows = [run(name, args, device) for name in args.scenarios]
     pd.DataFrame(rows).to_csv(os.path.join(args.out, f"summary_seed{args.seed}.csv"), index=False)
 
