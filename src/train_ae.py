@@ -15,12 +15,15 @@ DATA_DIR = os.path.join("data", "processed")
 SCENARIOS = ["S1", "S2", "S3", "LOLO0", "LOLO1", "LOLO2", "LOLO3"]
 MODELS = {"conv": ConvAE, "dense": DenseAE}
 
-def prepare(d, model_name):
+def prepare(d, model_name, norm):
     keys = ("X_train", "X_val", "X_val_mon", "X_test")
+    Xs = [d[k] for k in keys]
+    if norm == "window":
+        Xs = [(X - X.mean(axis=1, keepdims=True)) / (X.std(axis=1, keepdims=True) + 1e-8) for X in Xs]
     if model_name == "conv":
-        mean, std = float(d["mean"]), float(d["std"])
-        return [torch.from_numpy((d[k] - mean) / std).float().unsqueeze(1) for k in keys]
-    specs = [np.log1p(np.abs(np.fft.rfft(d[k], axis=1)))[:, :1024] for k in keys]
+        mean, std = (float(d["mean"]), float(d["std"])) if norm == "global" else (0.0, 1.0)
+        return [torch.from_numpy((X - mean) / std).float().unsqueeze(1) for X in Xs] 
+    specs = [np.log1p(np.abs(np.fft.rfft(X, axis=1)))[:, :1024] for X in Xs]
     mean, std = specs[0].mean(axis=0), specs[0].std(axis=0) + 1e-8
     return [torch.from_numpy((s - mean) / std).float() for s in specs]
 
@@ -37,7 +40,7 @@ def run(name, args, device):
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
     d = np.load(os.path.join(DATA_DIR, f"cwru_{name}.npz"))
-    X_train, X_val, X_mon, X_test = prepare(d, args.model)
+    X_train, X_val, X_mon, X_test = prepare(d, args.model, args.norm)
     loader = DataLoader(TensorDataset(X_train), batch_size=args.batch, shuffle=True)
 
     model = MODELS[args.model](latent=args.latent).to(device)
@@ -73,7 +76,7 @@ def run(name, args, device):
     model.load_state_dict(best_state)
     best_epoch = int(np.argmin([h["val_loss"] for h in history])) + 1
     res = evaluate(scores(model, X_val, device), scores(model, X_test, device), d["y_test"])
-    res.update(model=args.model, scenario=name, seed=args.seed, best_epoch=best_epoch,
+    res.update(model=args.model, norm=args.norm, scenario=name, seed=args.seed, best_epoch=best_epoch,
                epochs_run=len(history),
                convergence_epoch=convergence_epoch([h["mon_auc"] for h in history],
                                                    history[best_epoch - 1]["mon_auc"]),
@@ -90,6 +93,7 @@ def run(name, args, device):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--model", choices=list(MODELS), default="conv")
+    p.add_argument("--norm", choices=["global", "window"], default="global")
     p.add_argument("--scenarios", nargs="+", default=SCENARIOS)
     p.add_argument("--epochs", type=int, default=100)
     p.add_argument("--patience", type=int, default=10)
@@ -99,10 +103,10 @@ def main():
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--out", default=None)
     args = p.parse_args()
-    args.out = args.out or os.path.join("results", f"{args.model}_ae")
+    args.out = args.out or os.path.join("results", f"{args.model}_ae_{args.norm}")
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    print("device:", device, "| model:", args.model)
+    print("device:", device, "| model:", args.model, "| norm:", args.norm)
     rows = [run(name, args, device) for name in args.scenarios]
     pd.DataFrame(rows).to_csv(os.path.join(args.out, f"summary_seed{args.seed}.csv"), index=False)
 
