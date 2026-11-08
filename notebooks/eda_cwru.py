@@ -22,7 +22,6 @@ signals = {f: load_signal(f) for f in files["file"]}
 
 
 def high_share(x):
-    """Share of signal power above HIGH_HZ."""
     freqs, psd = welch(x, fs=FS, nperseg=4096)
     return psd[freqs > HIGH_HZ].sum() / psd.sum()
 
@@ -108,7 +107,7 @@ for ax, col, label in [(axes[0], "rms", "RMS, g"), (axes[1], "kurtosis", "kurtos
     ax.boxplot([features.loc[features.type == t, col] for t in order], showfliers=False)
     ax.set_xticks(range(1, len(order) + 1), [NAMES[t] for t in order])
     ax.set_ylabel(label)
-axes[1].axhline(3, color="grey", linestyle="--", linewidth=0.8)  # Gaussian noise level
+axes[1].axhline(3, color="grey", linestyle="--", linewidth=0.8)
 plt.suptitle("Window features by fault type (all sizes and loads)")
 plt.tight_layout()
 plt.savefig(os.path.join(OUT_DIR, "eda_feature_boxplots.png"), dpi=150)
