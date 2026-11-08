@@ -2,6 +2,8 @@ import csv
 import os
 import urllib.request
 
+import scipy.io as sio
+
 BASE_URL = "https://engineering.case.edu/sites/default/files/{}.mat"
 OUT_DIR = os.path.join("data", "raw", "cwru")
 
@@ -19,19 +21,31 @@ FILES = [
 ]
 
 
+def is_valid(path):
+    try:
+        sio.loadmat(path)
+        return True
+    except Exception:
+        return False
+
+
 def main():
     os.makedirs(OUT_DIR, exist_ok=True)
     rows, failed = [], []
     for fault, size, numbers in FILES:
         for load_hp, num in enumerate(numbers):
             path = os.path.join(OUT_DIR, f"{num}.mat")
-            if not os.path.exists(path):
+            if not is_valid(path):
                 try:
                     print(f"Downloading {num}.mat ({fault} {size} {load_hp}HP)...")
                     urllib.request.urlretrieve(BASE_URL.format(num), path)
+                    if not is_valid(path):
+                        raise ValueError("downloaded file cannot be read")
                 except Exception as e:
                     print(f"  ERROR {num}.mat: {e}")
                     failed.append(num)
+                    if os.path.exists(path):
+                        os.remove(path)
                     continue
             rows.append({"file": f"{num}.mat", "type": fault,
                          "size": size, "load_hp": load_hp})
