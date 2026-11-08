@@ -1,4 +1,5 @@
 import os
+import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -7,48 +8,45 @@ import scipy.io as sio
 from scipy.signal import welch
 from scipy.stats import kurtosis, skew
 
-DATA_DIR = os.path.join("data", "raw", "cwru")
+sys.path.insert(0, os.path.join("src", "data"))
+from cwru import NORMAL_FILES, RAW_DIR, WIN, load_signal
+
 OUT_DIR = "results"
 FS = 12000
-WIN = 2048
+HIGH_HZ = 2000
 NAMES = {"normal": "Normal", "IR": "Inner race", "B": "Ball", "OR": "Outer race"}
 
 os.makedirs(OUT_DIR, exist_ok=True)
-files = pd.read_csv(os.path.join(DATA_DIR, "files.csv"))
+files = pd.read_csv(os.path.join(RAW_DIR, "files.csv"))
+signals = {f: load_signal(f) for f in files["file"]}
 
 
-def channel(m, num, suffix):
-    key = f"X{num:03d}_{suffix}"
-    return m[key].ravel() if key in m else None
+def high_share(x):
+    """Share of signal power above HIGH_HZ."""
+    freqs, psd = welch(x, fs=FS, nperseg=4096)
+    return psd[freqs > HIGH_HZ].sum() / psd.sum()
 
-
-inventory, signals = [], {}
+inventory = []
 for _, r in files.iterrows():
     num = int(r["file"].split(".")[0])
-    m = sio.loadmat(os.path.join(DATA_DIR, r["file"]))
-    de = channel(m, num, "DE_time")
-    signals[r["file"]] = de
+    m = sio.loadmat(os.path.join(RAW_DIR, r["file"]))
+    x = signals[r["file"]]
     rpm_key = f"X{num:03d}RPM"
     inventory.append({
         "file": r["file"], "type": r["type"], "size_in": r["size"], "load_hp": r["load_hp"],
-        "has_FE": channel(m, num, "FE_time") is not None,
-        "has_BA": channel(m, num, "BA_time") is not None,
-        "samples": len(de), "duration_s": round(len(de) / FS, 1),
+        "has_FE": f"X{num:03d}_FE_time" in m, "has_BA": f"X{num:03d}_BA_time" in m,
+        "recorded_khz": 48 if r["file"] in NORMAL_FILES else 12,
+        "samples_12k": len(x), "duration_s": round(len(x) / FS, 1),
         "rpm": float(np.ravel(m[rpm_key])[0]) if rpm_key in m else np.nan,
-        "dtype": str(de.dtype),
-        "variables": ", ".join(k for k in m if not k.startswith("__")),
+        "high_share": round(high_share(x), 3),
     })
 inventory = pd.DataFrame(inventory)
 inventory.to_csv(os.path.join(OUT_DIR, "cwru_inventory.csv"), index=False)
 
-print("=== Variables inside two example files ===")
-for f in ("97.mat", "105.mat"):
-    print(f"{f}: {inventory.loc[inventory.file == f, 'variables'].item()}")
-print("\n=== Inventory ===")
-print(inventory.drop(columns="variables").to_string(index=False))
-print(f"\nTotal: {len(inventory)} files, {inventory.samples.sum():,} samples, "
-      f"{inventory.duration_s.sum():.0f} s of signal")
-
+print("=== Inventory ===")
+print(inventory.to_string(index=False))
+print(f"\nTotal: {len(inventory)} files, {inventory.duration_s.sum():.0f} s of signal; "
+      f"normal only: {inventory[inventory.type == 'normal'].duration_s.sum():.1f} s")
 
 def window_features(x):
     n = len(x) // WIN
@@ -58,7 +56,6 @@ def window_features(x):
     return pd.DataFrame({"rms": rms, "peak": peak, "crest": peak / rms,
                          "kurtosis": kurtosis(w, axis=1, fisher=False),  # Gaussian = 3
                          "skew": skew(w, axis=1)})
-
 
 parts = []
 for _, r in files.iterrows():
@@ -71,14 +68,15 @@ features.to_csv(os.path.join(OUT_DIR, "cwru_window_features.csv"), index=False)
 print("\n=== Mean features by fault type and size (windows of 2048 samples) ===")
 summary = (features.groupby(["type", "size_in"])[["rms", "peak", "crest", "kurtosis"]]
            .mean().round(3))
+summary["high_share"] = inventory.groupby(["type", "size_in"])["high_share"].mean().round(3)
 summary["windows"] = features.groupby(["type", "size_in"]).size()
 print(summary.to_string())
 summary.to_csv(os.path.join(OUT_DIR, "cwru_summary_by_type.csv"))
 
 print("\n=== Normal data: does the load change the signal? ===")
-print(features[features.type == "normal"].groupby("load_hp")[["rms", "kurtosis"]]
-      .mean().round(3).to_string())
-
+by_load = features[features.type == "normal"].groupby("load_hp")[["rms", "kurtosis"]].mean()
+by_load["high_share"] = inventory[inventory.type == "normal"].set_index("load_hp")["high_share"]
+print(by_load.round(3).to_string())
 
 examples = [("97.mat", "Normal"), ("105.mat", "Inner race 0.007 in"),
             ("118.mat", "Ball 0.007 in"), ("130.mat", "Outer race 0.007 in")]
@@ -99,7 +97,7 @@ for f, title in examples:
     ax.semilogy(freqs, psd, linewidth=0.8, label=title)
 ax.set_xlabel("frequency, Hz")
 ax.set_ylabel("power spectral density, g²/Hz")
-ax.set_title("Spectra at 0 HP: faults add energy at high frequencies")
+ax.set_title("Power spectra at 0 HP (all signals at 12 kHz)")
 ax.legend()
 plt.tight_layout()
 plt.savefig(os.path.join(OUT_DIR, "eda_spectra.png"), dpi=150)
@@ -114,6 +112,6 @@ axes[1].axhline(3, color="grey", linestyle="--", linewidth=0.8)  # Gaussian nois
 plt.suptitle("Window features by fault type (all sizes and loads)")
 plt.tight_layout()
 plt.savefig(os.path.join(OUT_DIR, "eda_feature_boxplots.png"), dpi=150)
+plt.close("all")
 
 print(f"\nSaved tables and figures to '{OUT_DIR}/'")
-plt.close("all")

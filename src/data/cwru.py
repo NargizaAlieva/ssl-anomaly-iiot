@@ -3,7 +3,7 @@ import os
 
 import numpy as np
 import scipy.io as sio
-from scipy.signal import resample_poly
+from scipy.signal import butter, resample_poly, sosfiltfilt
 
 RAW_DIR = os.path.join("data", "raw", "cwru")
 OUT_DIR = os.path.join("data", "processed")
@@ -16,6 +16,7 @@ SPLIT = (0.6, 0.2)
 ALL_PARTS = ("train", "val", "test")
 
 NORMAL_FILES = {"97.mat", "98.mat", "99.mat", "100.mat"}
+LOWPASS = butter(8, 5000, fs=12000, output="sos")
 
 def load_signal(file_name):
     m = sio.loadmat(os.path.join(RAW_DIR, file_name))
@@ -25,7 +26,7 @@ def load_signal(file_name):
     x = m[key].ravel()
     if file_name in NORMAL_FILES:
         x = resample_poly(x, 1, 4)
-    return x.astype(np.float32)
+    return sosfiltfilt(LOWPASS, x).astype(np.float32)
 
 def split_by_time(x):
     a, b = int(len(x) * SPLIT[0]), int(len(x) * (SPLIT[0] + SPLIT[1]))

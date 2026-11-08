@@ -1,41 +1,41 @@
-file,type,size_in,load_hp,has_FE,has_BA,samples,duration_s,rpm,dtype,variables
-97.mat,normal,0.0,0,True,False,243938,20.3,1796.0,float64,"X097_DE_time, X097_FE_time, X097RPM"
-98.mat,normal,0.0,1,True,False,483903,40.3,,float64,"X098_DE_time, X098_FE_time"
-99.mat,normal,0.0,2,True,False,485063,40.4,,float64,"ans, X098_DE_time, X098_FE_time, X099_DE_time, X099_FE_time"
-100.mat,normal,0.0,3,True,False,485643,40.5,1725.0,float64,"X100_DE_time, X100_FE_time, X100RPM"
-105.mat,IR,0.007,0,True,True,121265,10.1,1797.0,float64,"X105_DE_time, X105_FE_time, X105_BA_time, X105RPM"
-106.mat,IR,0.007,1,True,True,121991,10.2,1772.0,float64,"X106_DE_time, X106_FE_time, X106_BA_time, X106RPM"
-107.mat,IR,0.007,2,True,True,122136,10.2,1748.0,float64,"X107_DE_time, X107_FE_time, X107_BA_time, X107RPM"
-108.mat,IR,0.007,3,True,True,122917,10.2,1721.0,float64,"X108_DE_time, X108_FE_time, X108_BA_time, X108RPM"
-118.mat,B,0.007,0,True,True,122571,10.2,1796.0,float64,"X118_DE_time, X118_FE_time, X118_BA_time, X118RPM"
-119.mat,B,0.007,1,True,True,121410,10.1,1772.0,float64,"X119_DE_time, X119_FE_time, X119_BA_time, X119RPM"
-120.mat,B,0.007,2,True,True,121556,10.1,1748.0,float64,"X120_DE_time, X120_FE_time, X120_BA_time, X120RPM"
-121.mat,B,0.007,3,True,True,121556,10.1,1722.0,float64,"X121_DE_time, X121_FE_time, X121_BA_time, X121RPM"
-130.mat,OR,0.007,0,True,True,121991,10.2,1796.0,float64,"X130_DE_time, X130_FE_time, X130_BA_time, X130RPM"
-131.mat,OR,0.007,1,True,True,122426,10.2,1773.0,float64,"X131_DE_time, X131_FE_time, X131_BA_time, X131RPM"
-132.mat,OR,0.007,2,True,True,121410,10.1,1750.0,float64,"X132_DE_time, X132_FE_time, X132_BA_time, X132RPM"
-133.mat,OR,0.007,3,True,True,122571,10.2,1725.0,float64,"X133_DE_time, X133_FE_time, X133_BA_time, X133RPM"
-169.mat,IR,0.014,0,True,True,121846,10.2,1796.0,float64,"X169_DE_time, X169_FE_time, X169_BA_time, X169RPM"
-170.mat,IR,0.014,1,True,True,121846,10.2,1774.0,float64,"X170_DE_time, X170_FE_time, X170_BA_time, X170RPM"
-171.mat,IR,0.014,2,True,True,121846,10.2,1752.0,float64,"X171_DE_time, X171_FE_time, X171_BA_time, X171RPM"
-172.mat,IR,0.014,3,True,True,121701,10.1,1728.0,float64,"X172_DE_time, X172_FE_time, X172_BA_time, X172RPM"
-185.mat,B,0.014,0,True,True,121846,10.2,1796.0,float64,"X185_DE_time, X185_FE_time, X185_BA_time, X185RPM"
-186.mat,B,0.014,1,True,True,122136,10.2,1772.0,float64,"X186_DE_time, X186_FE_time, X186_BA_time, X186RPM"
-187.mat,B,0.014,2,True,True,121991,10.2,1749.0,float64,"X187_DE_time, X187_FE_time, X187_BA_time, X187RPM"
-188.mat,B,0.014,3,True,True,122136,10.2,1724.0,float64,"X188_DE_time, X188_FE_time, X188_BA_time, X188RPM"
-197.mat,OR,0.014,0,True,True,121846,10.2,1796.0,float64,"X197_DE_time, X197_FE_time, X197_BA_time, X197RPM"
-198.mat,OR,0.014,1,True,True,122136,10.2,1772.0,float64,"X198_DE_time, X198_FE_time, X198_BA_time, X198RPM"
-199.mat,OR,0.014,2,True,True,121846,10.2,1749.0,float64,"X199_DE_time, X199_FE_time, X199_BA_time, X199RPM"
-200.mat,OR,0.014,3,True,True,121991,10.2,1723.0,float64,"X200_DE_time, X200_FE_time, X200_BA_time, X200RPM"
-209.mat,IR,0.021,0,True,True,122136,10.2,1797.0,float64,"X209_DE_time, X209_FE_time, X209_BA_time, X209RPM"
-210.mat,IR,0.021,1,True,True,121556,10.1,1774.0,float64,"X210_DE_time, X210_FE_time, X210_BA_time, X210RPM"
-211.mat,IR,0.021,2,True,True,121846,10.2,1752.0,float64,"X211_DE_time, X211_FE_time, X211_BA_time, X211RPM"
-212.mat,IR,0.021,3,True,True,121991,10.2,1728.0,float64,"X212_DE_time, X212_FE_time, X212_BA_time, X212RPM"
-222.mat,B,0.021,0,True,True,121991,10.2,1796.0,float64,"X222_DE_time, X222_FE_time, X222_BA_time, X222RPM"
-223.mat,B,0.021,1,True,True,121701,10.1,1774.0,float64,"X223_DE_time, X223_FE_time, X223_BA_time, X223RPM"
-224.mat,B,0.021,2,True,True,122136,10.2,1754.0,float64,"X224_DE_time, X224_FE_time, X224_BA_time, X224RPM"
-225.mat,B,0.021,3,True,True,122136,10.2,1729.0,float64,"X225_DE_time, X225_FE_time, X225_BA_time, X225RPM"
-234.mat,OR,0.021,0,True,True,122426,10.2,1796.0,float64,"X234_DE_time, X234_FE_time, X234_BA_time, X234RPM"
-235.mat,OR,0.021,1,True,True,121991,10.2,1771.0,float64,"X235_DE_time, X235_FE_time, X235_BA_time, X235RPM"
-236.mat,OR,0.021,2,True,True,122281,10.2,1748.0,float64,"X236_DE_time, X236_FE_time, X236_BA_time, X236RPM"
-237.mat,OR,0.021,3,True,True,121991,10.2,1721.0,float64,"X237_DE_time, X237_FE_time, X237_BA_time, X237RPM"
+file,type,size_in,load_hp,has_FE,has_BA,recorded_khz,samples_12k,duration_s,rpm,high_share
+97.mat,normal,0.0,0,True,False,48,60985,5.1,1796.0,0.735
+98.mat,normal,0.0,1,True,False,48,120976,10.1,,0.496
+99.mat,normal,0.0,2,True,False,48,121266,10.1,,0.481
+100.mat,normal,0.0,3,True,False,48,121411,10.1,1725.0,0.467
+105.mat,IR,0.007,0,True,True,12,121265,10.1,1797.0,0.791
+106.mat,IR,0.007,1,True,True,12,121991,10.2,1772.0,0.794
+107.mat,IR,0.007,2,True,True,12,122136,10.2,1748.0,0.786
+108.mat,IR,0.007,3,True,True,12,122917,10.2,1721.0,0.796
+118.mat,B,0.007,0,True,True,12,122571,10.2,1796.0,0.909
+119.mat,B,0.007,1,True,True,12,121410,10.1,1772.0,0.932
+120.mat,B,0.007,2,True,True,12,121556,10.1,1748.0,0.933
+121.mat,B,0.007,3,True,True,12,121556,10.1,1722.0,0.889
+130.mat,OR,0.007,0,True,True,12,121991,10.2,1796.0,0.991
+131.mat,OR,0.007,1,True,True,12,122426,10.2,1773.0,0.988
+132.mat,OR,0.007,2,True,True,12,121410,10.1,1750.0,0.986
+133.mat,OR,0.007,3,True,True,12,122571,10.2,1725.0,0.982
+169.mat,IR,0.014,0,True,True,12,121846,10.2,1796.0,0.941
+170.mat,IR,0.014,1,True,True,12,121846,10.2,1774.0,0.949
+171.mat,IR,0.014,2,True,True,12,121846,10.2,1752.0,0.928
+172.mat,IR,0.014,3,True,True,12,121701,10.1,1728.0,0.849
+185.mat,B,0.014,0,True,True,12,121846,10.2,1796.0,0.843
+186.mat,B,0.014,1,True,True,12,122136,10.2,1772.0,0.856
+187.mat,B,0.014,2,True,True,12,121991,10.2,1749.0,0.82
+188.mat,B,0.014,3,True,True,12,122136,10.2,1724.0,0.732
+197.mat,OR,0.014,0,True,True,12,121846,10.2,1796.0,0.819
+198.mat,OR,0.014,1,True,True,12,122136,10.2,1772.0,0.862
+199.mat,OR,0.014,2,True,True,12,121846,10.2,1749.0,0.852
+200.mat,OR,0.014,3,True,True,12,121991,10.2,1723.0,0.768
+209.mat,IR,0.021,0,True,True,12,122136,10.2,1797.0,0.929
+210.mat,IR,0.021,1,True,True,12,121556,10.1,1774.0,0.947
+211.mat,IR,0.021,2,True,True,12,121846,10.2,1752.0,0.955
+212.mat,IR,0.021,3,True,True,12,121991,10.2,1728.0,0.947
+222.mat,B,0.021,0,True,True,12,121991,10.2,1796.0,0.906
+223.mat,B,0.021,1,True,True,12,121701,10.1,1774.0,0.915
+224.mat,B,0.021,2,True,True,12,122136,10.2,1754.0,0.812
+225.mat,B,0.021,3,True,True,12,122136,10.2,1729.0,0.69
+234.mat,OR,0.021,0,True,True,12,122426,10.2,1796.0,0.911
+235.mat,OR,0.021,1,True,True,12,121991,10.2,1771.0,0.92
+236.mat,OR,0.021,2,True,True,12,122281,10.2,1748.0,0.925
+237.mat,OR,0.021,3,True,True,12,121991,10.2,1721.0,0.927
