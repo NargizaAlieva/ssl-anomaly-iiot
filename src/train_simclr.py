@@ -13,18 +13,15 @@ from metrics import convergence_epoch, evaluate
 from models.simclr import SimCLR, nt_xent
 from train_ae import DATA_DIR, SCENARIOS, prepare
 
-
 @torch.no_grad()
 def embed(model, X, device, batch=512):
     model.eval()
     return torch.cat([F.normalize(model.encoder(X[i:i + batch].to(device)), dim=1)
                       for i in range(0, len(X), batch)])
 
-
 @torch.no_grad()
 def knn_scores(bank, E, k):
     return (1 - (E @ bank.t()).topk(k, dim=1).values.mean(dim=1)).cpu().numpy()
-
 
 @torch.no_grad()
 def val_loss(model, X, args, device):
@@ -33,7 +30,6 @@ def val_loss(model, X, args, device):
         torch.manual_seed(0)
         x = X.to(device)
         return nt_xent(model(augment(x, args.augs)), model(augment(x, args.augs)), args.tau).item()
-
 
 def run(name, args, device):
     torch.manual_seed(args.seed)
@@ -87,7 +83,7 @@ def run(name, args, device):
                    knn_scores(bank, embed(model, X_test, device), args.k), d["y_test"])
     res.update(model="simclr", norm=args.norm, scenario=name, seed=args.seed, best_epoch=best_epoch,
                epochs_run=len(history),
-               convergence_epoch=convergence_epoch([h["mon_auc"] for h in history],
+               convergence_epoch=convergence_epoch([h["mon_auc"] for h in history[:best_epoch]],
                                                    history[best_epoch - 1]["mon_auc"]),
                train_time_s=round(time.time() - start, 1))
 
@@ -98,7 +94,6 @@ def run(name, args, device):
           f"best epoch {best_epoch:3d}  convergence epoch {res['convergence_epoch']:3d}  "
           f"{res['train_time_s']:.0f} s")
     return res
-
 
 def main():
     p = argparse.ArgumentParser()
@@ -119,9 +114,10 @@ def main():
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print("device:", device, "| model: simclr | norm:", args.norm, "| augs:", " ".join(args.augs))
-    rows = [run(name, args, device) for name in args.scenarios]
-    pd.DataFrame(rows).to_csv(os.path.join(args.out, f"summary_seed{args.seed}.csv"), index=False)
-
+    rows = []
+    for name in args.scenarios:
+        rows.append(run(name, args, device))
+        pd.DataFrame(rows).to_csv(os.path.join(args.out, f"summary_seed{args.seed}.csv"), index=False)
 
 if __name__ == "__main__":
     main()

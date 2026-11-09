@@ -1,7 +1,6 @@
 import numpy as np
 from sklearn.metrics import roc_auc_score
 
-
 def evaluate(s_val, s_test, y_test, pct=99):
     thr = np.percentile(s_val, pct)
     alarm = s_test > thr
@@ -11,7 +10,5 @@ def evaluate(s_val, s_test, y_test, pct=99):
 
 def convergence_epoch(auc_history, ref, frac=0.95):
     target = 0.5 + frac * (ref - 0.5)
-    for epoch, auc in enumerate(auc_history, start=1):
-        if auc >= target:
-            return epoch
-    return len(auc_history)
+    below = [epoch for epoch, auc in enumerate(auc_history, start=1) if auc < target]
+    return below[-1] + 1 if below else 1

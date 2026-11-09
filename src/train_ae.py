@@ -86,7 +86,7 @@ def run(name, args, device):
     res = evaluate(scores(model, X_val, device), scores(model, X_test, device), d["y_test"])
     res.update(model=args.model, norm=args.norm, scenario=name, seed=args.seed, best_epoch=best_epoch,
                epochs_run=len(history),
-               convergence_epoch=convergence_epoch([h["mon_auc"] for h in history],
+               convergence_epoch=convergence_epoch([h["mon_auc"] for h in history[:best_epoch]],
                                                    history[best_epoch - 1]["mon_auc"]),
                train_time_s=round(time.time() - start, 1))
 
@@ -115,8 +115,10 @@ def main():
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print("device:", device, "| model:", args.model, "| norm:", args.norm)
-    rows = [run(name, args, device) for name in args.scenarios]
-    pd.DataFrame(rows).to_csv(os.path.join(args.out, f"summary_seed{args.seed}.csv"), index=False)
+    rows = []
+    for name in args.scenarios:
+        rows.append(run(name, args, device))
+        pd.DataFrame(rows).to_csv(os.path.join(args.out, f"summary_seed{args.seed}.csv"), index=False)
 
 if __name__ == "__main__":
     main()
